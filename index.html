@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="theme-color" content="#1A1A2E" />
+  <title>HUHU'S TRIP</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</head>
+<body>
+
+  <!-- ===== SIDEBAR NAV ===== -->
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <span class="logo-icon">✈️</span>
+      <span class="logo-text">HUHU'S TRIP</span>
+    </div>
+    <ul class="nav-links">
+      <li><a href="#" class="nav-item active" data-page="home"><span class="nav-icon">🗺️</span><span>旅行地图</span></a></li>
+      <li><a href="#" class="nav-item" data-page="trips"><span class="nav-icon">📋</span><span>旅行记录</span></a></li>
+      <li><a href="#" class="nav-item" data-page="add"><span class="nav-icon">➕</span><span>新增旅行</span></a></li>
+      <li><a href="#" class="nav-item" data-page="expense"><span class="nav-icon">💰</span><span>花费统计</span></a></li>
+      <li><a href="#" class="nav-item" data-page="ai"><span class="nav-icon">🤖</span><span>AI 总结</span></a></li>
+      <li><a href="#" class="nav-item" data-page="passport"><span class="nav-icon">📘</span><span>旅行护照</span></a></li>
+      <li><a href="#" class="nav-item" data-page="avatar"><span class="nav-icon">🎭</span><span>旅行角色</span></a></li>
+    </ul>
+    <div class="sidebar-footer">
+      <div class="user-badge">
+        <span class="user-avatar">🧭</span>
+        <div>
+          <div class="user-name">探索者</div>
+          <div class="user-stat" id="nav-stat">0 次旅行</div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ===== MOBILE TOP BAR ===== -->
+  <header class="topbar">
+    <button class="menu-btn" id="menuBtn">☰</button>
+    <span class="topbar-title">✈️ HUHU'S TRIP</span>
+    <button class="add-btn-mobile" data-page="add">＋</button>
+  </header>
+
+  <!-- ===== MAIN CONTENT ===== -->
+  <main class="main-content" id="mainContent">
+
+    <!-- PAGE: HOME -->
+    <section class="page active" id="page-home">
+      <div class="page-header">
+        <h1>我的旅行世界</h1>
+        <p class="subtitle">记录每一次探索，留住每一段记忆</p>
+      </div>
+      <div class="stats-row">
+        <div class="stat-card"><div class="stat-icon">🌍</div><div class="stat-value" id="stat-countries">0</div><div class="stat-label">个国家</div></div>
+        <div class="stat-card"><div class="stat-icon">✈️</div><div class="stat-value" id="stat-trips">0</div><div class="stat-label">次旅行</div></div>
+        <div class="stat-card"><div class="stat-icon">📅</div><div class="stat-value" id="stat-days">0</div><div class="stat-label">天旅途</div></div>
+        <div class="stat-card"><div class="stat-icon">💸</div><div class="stat-value" id="stat-total-expense">¥0</div><div class="stat-label">总花费</div></div>
+      </div>
+
+      <div class="map-container">
+        <div class="map-header">
+          <h2>🗺️ 足迹地图</h2>
+          <span class="map-hint">已访问国家以橙色高亮显示</span>
+        </div>
+        <!-- Leaflet 真实世界地图 -->
+        <div class="world-map-wrap" id="worldMapWrap">
+          <div id="leafletMap" style="width:100%;height:380px;border-radius:10px;"></div>
+        </div>
+      </div>
+
+      <div class="section-header">
+        <h2>📸 最近旅行</h2>
+        <a href="#" class="link-more" data-page="trips">查看全部 →</a>
+      </div>
+      <div class="trips-grid" id="recentTripsGrid">
+        <div class="empty-state"><div class="empty-icon">🌐</div>
+          <p>还没有旅行记录，<a href="#" data-page="add">点击添加</a>你的第一次旅行！</p></div>
+      </div>
+    </section>
+
+    <!-- PAGE: TRIPS LIST -->
+    <section class="page" id="page-trips">
+      <div class="page-header">
+        <h1>旅行记录</h1>
+        <p class="subtitle">每一次旅行都是一个故事</p>
+      </div>
+      <div class="toolbar">
+        <input type="text" class="search-input" id="searchInput" placeholder="🔍  搜索目的地、国家…" />
+        <div class="filter-tags" id="filterTags">
+          <span class="tag active" data-filter="all">全部</span>
+          <span class="tag" data-filter="美食">美食</span>
+          <span class="tag" data-filter="海岛">海岛</span>
+          <span class="tag" data-filter="历史">历史</span>
+          <span class="tag" data-filter="城市">城市</span>
+          <span class="tag" data-filter="自然">自然</span>
+        </div>
+      </div>
+      <div class="trips-list" id="tripsListFull">
+        <div class="empty-state"><div class="empty-icon">🗺️</div>
+          <p>旅行记录空空如也，<a href="#" data-page="add">去记录你的第一次旅行</a></p></div>
+      </div>
+    </section>
+
+    <!-- PAGE: ADD / EDIT TRIP -->
+    <section class="page" id="page-add">
+      <div class="page-header">
+        <h1 id="formPageTitle">新增旅行记录</h1>
+        <p class="subtitle">记录这段美好的旅途</p>
+      </div>
+      <form class="trip-form card" id="tripForm">
+        <input type="hidden" id="f-id" />
+        <div class="form-grid">
+          <div class="form-group">
+            <label>🏙️ 目的地城市</label>
+            <input type="text" id="f-city" placeholder="例如：悉尼" required />
+          </div>
+          <div class="form-group">
+            <label>🌍 国家</label>
+            <input type="text" id="f-country" placeholder="例如：澳大利亚" required />
+          </div>
+          <div class="form-group">
+            <label>🏴 国家代码（2位）</label>
+            <input type="text" id="f-code" placeholder="例如：AU" maxlength="2" style="text-transform:uppercase" />
+          </div>
+          <div class="form-group">
+            <label>📅 出发日期</label>
+            <input type="date" id="f-start" required />
+          </div>
+          <div class="form-group">
+            <label>📅 返回日期</label>
+            <input type="date" id="f-end" required />
+          </div>
+          <div class="form-group full">
+            <label>📝 旅行标签</label>
+            <div class="tag-selector" id="tagSelector">
+              <span class="sel-tag" data-tag="美食">🍜 美食</span>
+              <span class="sel-tag" data-tag="海岛">🏖️ 海岛</span>
+              <span class="sel-tag" data-tag="历史">🏛️ 历史</span>
+              <span class="sel-tag" data-tag="城市">🏙️ 城市</span>
+              <span class="sel-tag" data-tag="自然">🌿 自然</span>
+              <span class="sel-tag" data-tag="购物">🛍️ 购物</span>
+              <span class="sel-tag" data-tag="文化">🎭 文化</span>
+              <span class="sel-tag" data-tag="冒险">🧗 冒险</span>
+            </div>
+          </div>
+          <div class="form-group full">
+            <label>📖 旅行感悟</label>
+            <textarea id="f-notes" rows="4" placeholder="记录这次旅行最难忘的瞬间…"></textarea>
+          </div>
+          <div class="form-group full">
+            <label>👫 旅行同伴</label>
+            <input type="text" id="f-companions" placeholder="例如：小明、Sarah、表弟（多人用逗号分隔）" />
+          </div>
+          <div class="form-group full">
+            <label>🖼️ 封面图片 URL（可选）</label>
+            <input type="url" id="f-image" placeholder="https://…" />
+          </div>
+        </div>
+
+        <div class="form-section-title">💰 旅行花费（元）</div>
+        <div class="form-grid">
+          <div class="form-group"><label>✈️ 机票</label><input type="number" id="f-flight" placeholder="0" min="0" /></div>
+          <div class="form-group"><label>🏨 酒店</label><input type="number" id="f-hotel" placeholder="0" min="0" /></div>
+          <div class="form-group"><label>🍽️ 餐饮</label><input type="number" id="f-food" placeholder="0" min="0" /></div>
+          <div class="form-group"><label>🎫 门票</label><input type="number" id="f-tickets" placeholder="0" min="0" /></div>
+          <div class="form-group"><label>💼 其他</label><input type="number" id="f-other" placeholder="0" min="0" /></div>
+          <div class="form-group expense-total-display">
+            <label>本次旅行总花费</label>
+            <div class="expense-total-value" id="formExpenseTotal">¥ 0</div>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn btn-outline" id="cancelBtn">取消</button>
+          <button type="submit" class="btn btn-primary" id="submitBtn">🗺️ 保存旅行记录</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- PAGE: EXPENSE -->
+    <section class="page" id="page-expense">
+      <div class="page-header">
+        <h1>旅行花费统计</h1>
+        <p class="subtitle">每一分钱都换来了珍贵的回忆</p>
+      </div>
+      <div class="stats-row">
+        <div class="stat-card"><div class="stat-icon">💸</div><div class="stat-value" id="exp-total">¥0</div><div class="stat-label">总花费</div></div>
+        <div class="stat-card"><div class="stat-icon">📊</div><div class="stat-value" id="exp-avg">¥0</div><div class="stat-label">平均每次</div></div>
+        <div class="stat-card"><div class="stat-icon">🏆</div><div class="stat-value" id="exp-max-trip">—</div><div class="stat-label">最贵旅行</div></div>
+        <div class="stat-card"><div class="stat-icon">🌏</div><div class="stat-value" id="exp-max-country">—</div><div class="stat-label">最贵国家</div></div>
+      </div>
+      <div class="charts-grid">
+        <div class="card chart-card"><h3>花费类型分布</h3><div class="chart-wrap"><canvas id="pieChart"></canvas></div></div>
+        <div class="card chart-card"><h3>各国花费对比</h3><div class="chart-wrap"><canvas id="barChart"></canvas></div></div>
+      </div>
+      <div class="section-header"><h2>🏆 花费排行榜</h2></div>
+      <div class="leaderboard" id="expenseLeaderboard"></div>
+    </section>
+
+    <!-- PAGE: AI INSIGHTS -->
+    <section class="page" id="page-ai">
+      <div class="page-header">
+        <h1>AI 旅行总结</h1>
+        <p class="subtitle">智能分析你的旅行足迹</p>
+      </div>
+      <div class="ai-generate-wrap">
+        <button class="btn btn-primary btn-large" id="generateAiBtn">
+          <span class="btn-icon">🤖</span> 生成我的旅行报告
+        </button>
+      </div>
+      <div id="aiInsightsContainer" class="ai-insights-grid"></div>
+    </section>
+
+    <!-- PAGE: PASSPORT -->
+    <section class="page" id="page-passport">
+      <div class="page-header">
+        <h1>虚拟旅行护照</h1>
+        <p class="subtitle">每一个印章都是一段故事</p>
+      </div>
+      <div class="passport-stats">
+        <div class="passport-stat"><span class="pstat-num" id="passport-count">0</span><span class="pstat-label">个国家</span></div>
+        <div class="passport-divider">|</div>
+        <div class="passport-stat"><span class="pstat-num" id="passport-world-pct">0%</span><span class="pstat-label">世界探索度</span></div>
+        <div class="passport-divider">|</div>
+        <div class="passport-stat"><span class="pstat-num" id="passport-stamps">0</span><span class="pstat-label">个印章</span></div>
+      </div>
+      <div class="passport-book">
+        <div class="passport-cover">
+          <div class="passport-cover-inner">
+            <div class="passport-cover-logo">✈️</div>
+            <div class="passport-cover-title">TRAVEL PASSPORT</div>
+            <div class="passport-cover-subtitle">旅行护照</div>
+            <div class="passport-cover-owner">探索者</div>
+          </div>
+        </div>
+        <div class="passport-pages">
+          <div class="passport-watermark">WORLD EXPLORER</div>
+          <div class="stamps-grid" id="stampsGrid">
+            <div class="empty-stamp-hint"><span>📮</span><p>开始旅行，收集你的第一个印章！</p></div>
+          </div>
+        </div>
+      </div>
+      <div class="world-progress">
+        <h3>🌍 世界探索进度</h3>
+        <div class="continents-progress" id="continentsProgress"></div>
+      </div>
+    </section>
+
+    <!-- PAGE: TRIP DETAIL -->
+    <section class="page" id="page-detail">
+      <div class="page-header detail-header">
+        <button class="btn btn-outline btn-back" id="detailBackBtn">← 返回列表</button>
+        <div class="detail-header-actions">
+          <button class="btn btn-outline" id="detailEditBtn">✏️ 编辑</button>
+          <button class="btn btn-danger" id="detailDeleteBtn">🗑 删除</button>
+        </div>
+      </div>
+      <div id="detailContent"></div>
+
+      <!-- 景点记录区 -->
+      <div class="spots-section card" id="spotsSection">
+        <div class="spots-header">
+          <h2>📍 景点打卡记录</h2>
+          <button class="btn btn-primary btn-sm" id="addSpotBtn">＋ 添加景点</button>
+        </div>
+        <!-- 添加/编辑景点表单 -->
+        <div class="spot-form" id="spotForm" style="display:none">
+          <div class="spot-form-grid">
+            <div class="form-group">
+              <label>📍 景点名称</label>
+              <input type="text" id="sf-name" placeholder="例如：歌剧院" required />
+            </div>
+            <div class="form-group">
+              <label>📅 游览日期</label>
+              <input type="date" id="sf-date" />
+            </div>
+            <div class="form-group">
+              <label>⭐ 评分</label>
+              <div class="star-picker" id="starPicker">
+                <span class="star" data-v="1">★</span>
+                <span class="star" data-v="2">★</span>
+                <span class="star" data-v="3">★</span>
+                <span class="star" data-v="4">★</span>
+                <span class="star" data-v="5">★</span>
+              </div>
+              <input type="hidden" id="sf-rating" value="0" />
+            </div>
+            <div class="form-group full">
+              <label>🗒️ 游览心得</label>
+              <textarea id="sf-note" rows="3" placeholder="记录这个景点的印象…"></textarea>
+            </div>
+            <div class="form-group">
+              <label>🖼️ 照片 URL（可选）</label>
+              <input type="url" id="sf-photo" placeholder="https://…" />
+            </div>
+            <div class="form-group">
+              <label>💰 门票花费（元）</label>
+              <input type="number" id="sf-cost" placeholder="0" min="0" />
+            </div>
+          </div>
+          <input type="hidden" id="sf-id" />
+          <div class="spot-form-actions">
+            <button type="button" class="btn btn-outline btn-sm" id="cancelSpotBtn">取消</button>
+            <button type="button" class="btn btn-primary btn-sm" id="saveSpotBtn">保存景点</button>
+          </div>
+        </div>
+        <div class="spots-list" id="spotsList"></div>
+      </div>
+    </section>
+
+    <!-- PAGE: AVATAR / 旅行角色 -->
+    <section class="page" id="page-avatar">
+      <div class="page-header">
+        <h1>旅行角色</h1>
+        <p class="subtitle">打造你和同伴的专属旅行形象</p>
+      </div>
+
+      <!-- 角色选择 tabs -->
+      <div class="avatar-tabs" id="avatarTabs">
+        <button class="avt-tab active" data-avt="self">🧍 我的形象</button>
+        <!-- 同伴 tab 动态生成 -->
+        <button class="avt-tab avt-add-btn" id="addAvatarBtn">＋ 添加角色</button>
+      </div>
+
+      <!-- 角色编辑区 -->
+      <div class="avatar-workspace">
+        <!-- 预览 -->
+        <div class="avatar-preview-wrap">
+          <div class="avatar-name-row">
+            <input type="text" class="avatar-name-input" id="avatarNameInput" placeholder="角色名称" maxlength="12"/>
+            <button class="btn btn-outline btn-sm" id="saveAvatarNameBtn">保存</button>
+          </div>
+          <div class="avatar-canvas" id="avatarCanvas">
+            <!-- SVG 卡通人物，由 JS 动态渲染 -->
+          </div>
+          <div class="avatar-download-row">
+            <button class="btn btn-outline btn-sm" id="shareAvatarBtn">📷 保存图片</button>
+          </div>
+        </div>
+
+        <!-- 换装面板 -->
+        <div class="avatar-dresser">
+          <div class="dresser-category" id="dresser-skin">
+            <div class="dresser-title">🎨 肤色</div>
+            <div class="dresser-options" id="opts-skin"></div>
+          </div>
+          <div class="dresser-category" id="dresser-hair">
+            <div class="dresser-title">💇 发型 &amp; 发色</div>
+            <div class="dresser-options" id="opts-hair"></div>
+          </div>
+          <div class="dresser-category" id="dresser-eyes">
+            <div class="dresser-title">👀 眼睛</div>
+            <div class="dresser-options" id="opts-eyes"></div>
+          </div>
+          <div class="dresser-category" id="dresser-outfit">
+            <div class="dresser-title">👕 服装</div>
+            <div class="dresser-options" id="opts-outfit"></div>
+          </div>
+          <div class="dresser-category" id="dresser-acc">
+            <div class="dresser-title">🎒 配件</div>
+            <div class="dresser-options" id="opts-acc"></div>
+          </div>
+          <div class="dresser-category" id="dresser-bg">
+            <div class="dresser-title">🌄 背景</div>
+            <div class="dresser-options" id="opts-bg"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 所有角色展示 -->
+      <div class="section-header" style="margin-top:40px">
+        <h2>👥 全员角色卡</h2>
+      </div>
+      <div class="avatar-gallery" id="avatarGallery"></div>
+    </section>
+
+  </main>
+
+  <!-- TOAST -->
+  <div class="toast" id="toast"></div>
+  <!-- OVERLAY -->
+  <div class="overlay" id="overlay"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
